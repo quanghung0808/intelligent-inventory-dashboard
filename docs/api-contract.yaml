@@ -1,0 +1,247 @@
+openapi: 3.0.3
+info:
+  title: Keyloop Intelligent Inventory API
+  description: RESTful API for dealership inventory visualization, aging stock metrics, and action logging.
+  version: 1.0.0
+servers:
+  - url: /api
+    description: Mock Service Worker (MSW) or Production Backend endpoint
+
+paths:
+  /vehicles:
+    get:
+      summary: Retrieve all inventory vehicles with optional filters
+      operationId: getVehicles
+      parameters:
+        - name: dealershipId
+          in: query
+          required: false
+          schema:
+            type: string
+            default: "dlr-001"
+        - name: make
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: model
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: agingOnly
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response with vehicle inventory list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Vehicle'
+                  totalCount:
+                    type: integer
+                  agingCount:
+                    type: integer
+                  totalValue:
+                    type: number
+                  averageDaysInStock:
+                    type: number
+
+  /vehicles/{id}:
+    get:
+      summary: Retrieve a single vehicle by ID
+      operationId: getVehicleById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Vehicle details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vehicle'
+        '404':
+          description: Vehicle not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /vehicles/{id}/actions:
+    post:
+      summary: Log an action or status decision for a vehicle
+      operationId: logVehicleAction
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateActionRequest'
+      responses:
+        '200':
+          description: Action logged successfully, returns updated vehicle
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vehicle'
+        '400':
+          description: Invalid action payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Vehicle not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error (for testing failure rollback)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    Vehicle:
+      type: object
+      required:
+        - id
+        - vin
+        - make
+        - model
+        - year
+        - trim
+        - price
+        - mileage
+        - fuelType
+        - status
+        - intakeDate
+        - dealershipId
+        - actionHistory
+      properties:
+        id:
+          type: string
+          example: "veh-001"
+        vin:
+          type: string
+          example: "1HGCR2F83HA123456"
+        make:
+          type: string
+          example: "Honda"
+        model:
+          type: string
+          example: "Accord"
+        year:
+          type: integer
+          example: 2022
+        trim:
+          type: string
+          example: "Sport 2.0T"
+        price:
+          type: number
+          example: 28950
+        mileage:
+          type: integer
+          example: 34200
+        fuelType:
+          type: string
+          enum: [GASOLINE, HYBRID, ELECTRIC, DIESEL]
+          example: "GASOLINE"
+        status:
+          type: string
+          enum: [AVAILABLE, SALE_PENDING, IN_RECONDITIONING, WHOLESALE_SCHEDULED, AUCTION_SCHEDULED]
+          example: "AVAILABLE"
+        intakeDate:
+          type: string
+          format: date
+          example: "2024-01-15"
+        dealershipId:
+          type: string
+          example: "dlr-001"
+        actionHistory:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActionLog'
+
+    ActionLog:
+      type: object
+      required:
+        - id
+        - actionType
+        - note
+        - author
+        - timestamp
+      properties:
+        id:
+          type: string
+          example: "act-9921"
+        actionType:
+          type: string
+          enum: [PRICE_DROP, SEND_TO_AUCTION, WHOLESALE_TRANSFER, RECONDITIONING, MARKETING_BOOST, STATUS_CHANGE]
+          example: "PRICE_DROP"
+        note:
+          type: string
+          example: "Applied $1,000 markdown to stimulate web leads."
+        author:
+          type: string
+          example: "Marcus Vance (Inventory Manager)"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-05-10T14:32:00Z"
+
+    CreateActionRequest:
+      type: object
+      required:
+        - actionType
+        - note
+      properties:
+        actionType:
+          type: string
+          enum: [PRICE_DROP, SEND_TO_AUCTION, WHOLESALE_TRANSFER, RECONDITIONING, MARKETING_BOOST, STATUS_CHANGE]
+          example: "PRICE_DROP"
+        note:
+          type: string
+          example: "Applied $1,000 markdown to stimulate web leads."
+        author:
+          type: string
+          example: "Marcus Vance (Inventory Manager)"
+
+    ErrorResponse:
+      type: object
+      required:
+        - statusCode
+        - message
+      properties:
+        statusCode:
+          type: integer
+          example: 404
+        message:
+          type: string
+          example: "Vehicle with ID veh-999 not found"
