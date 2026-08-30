@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Table,
   TableHeader,
@@ -10,6 +10,9 @@ import { Vehicle } from '../../types/vehicle';
 import { InventoryEmptyState } from './InventoryEmptyState';
 import { VehicleCard } from './VehicleCard';
 import { VehicleTableRow } from './VehicleTableRow';
+import { TablePagination } from './TablePagination';
+
+const PAGE_SIZE = 10;
 
 interface InventoryTableProps {
   vehicles: Vehicle[];
@@ -17,15 +20,26 @@ interface InventoryTableProps {
 }
 
 export const InventoryTable: React.FC<InventoryTableProps> = ({ vehicles, onSelectVehicle }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Reset to page 1 whenever the filtered list changes.
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [vehicles]);
+
   if (vehicles.length === 0) {
     return <InventoryEmptyState />;
   }
+
+  const totalPages = Math.ceil(vehicles.length / PAGE_SIZE);
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const pageVehicles = vehicles.slice(start, start + PAGE_SIZE);
 
   return (
     <div className="relative z-10">
       {/* Mobile Card List View (< md) */}
       <div className="block md:hidden space-y-3">
-        {vehicles.map((vehicle) => (
+        {pageVehicles.map((vehicle) => (
           <VehicleCard key={vehicle.id} vehicle={vehicle} onSelect={onSelectVehicle} />
         ))}
       </div>
@@ -64,13 +78,19 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({ vehicles, onSele
             </TableHeader>
 
             <TableBody className="divide-y divide-slate-100 text-sm">
-              {vehicles.map((vehicle) => (
+              {pageVehicles.map((vehicle) => (
                 <VehicleTableRow key={vehicle.id} vehicle={vehicle} onSelect={onSelectVehicle} />
               ))}
             </TableBody>
           </Table>
         </div>
       </div>
+
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 };
