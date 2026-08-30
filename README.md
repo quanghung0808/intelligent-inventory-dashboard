@@ -86,22 +86,33 @@ npm run test:watch
 
 ## 🤖 AI Collaboration Narrative
 
-### 1. High-Level Strategy & Direction
-Generative AI (Google DeepMind Antigravity) was engaged as an active pair programmer and architectural co-designer under strict engineering guardrails:
-- **Contract-First Modeling**: Used AI to synthesize the OpenAPI 3.0 specification ([docs/api-contract.yaml](docs/api-contract.yaml)) before writing frontend components, ensuring strict type safety.
-- **The Ponytail Principle (Pragmatic & Minimal)**: Enforced simplicity over premature abstractions (e.g., pure date utilities in `aging.ts` with injectable reference dates, standard library before dependencies).
-- **Vercel React Performance Rules**: Enforced zero waterfalls (`async-parallel`), in-render derived states without redundant `useEffect` chains, and optimistic mutation patterns with automatic rollback.
+### Strategy
 
-### 2. Verification & Quality Assurance Process
-- **Deterministic Boundary Testing**: Directed AI to construct explicit boundary test cases for `89`, `90`, and `91` days (`tests/lib/aging.test.ts`) to rigorously prove the $>90$ days aging threshold.
-- **Fault-Tolerance Verification**: Built an interactive simulated 500 error toggle in the UI and automated test harness (`tests/components/Rollback.test.tsx`) asserting that TanStack Query snapshots rollback state upon failure.
-- **Strict Static Typing**: Configured strict TypeScript compiler options (`npx tsc -b`) ensuring zero type warnings and complete contract alignment.
+AI (Google DeepMind Antigravity) was used as a pair programmer under strict engineering guardrails. Each session was guided by a specific **skill** — a focused ruleset that constrained the AI's output to a single concern:
+
+| Skill | Applied to | What it enforced |
+|---|---|---|
+| `ponytail` | `lib/aging.ts`, formatters, API handlers | YAGNI and minimalism — pure functions, native `Intl` APIs, no unnecessary abstractions |
+| `clean-code-principles` | `InventoryTable`, `StatusPanel`, `FilterBar` | SOLID SRP — each 400+ line file split into focused feature folders; DRY — `formatCurrency` extracted to `lib/formatters.ts` |
+| `vercel-react-best-practices` | `Dashboard.tsx`, `useVehicles.ts` | Zero waterfalls, `useMemo` derived state, atomic Zustand selectors, optimistic updates with `onError` rollback |
+| `vercel-composition-patterns` | `InventoryTable`, `StatusPanel` | Compose sub-panels instead of boolean props — `VehicleCard`/`VehicleTableRow` per breakpoint, `ActionForm`/`ActionTimeline` as independent panels |
+| `software-ui-ux-design` | All components | Consistent risk color system, WCAG keyboard accessibility, responsive layouts, skeleton loading states |
+
+### Verification
+
+AI output was never accepted without verification. Every file went through:
+
+1. `npx tsc --noEmit` — zero TypeScript errors
+2. `npx vitest run` — 22 tests, 100% pass rate
+3. `npm run build` — clean production bundle
+4. Manual review against `docs/api-contract.yaml`
+
+Boundary tests at `89`, `90`, and `91` days prove the strict `> 90` aging threshold. Optimistic rollback is verified by a simulated 500 error in `tests/components/Rollback.test.tsx`.
 
 ---
 
-## 📖 Architecture & Design Documentation
+## 📖 Documentation
 
-For in-depth architecture diagrams, data flow models, and API specifications:
 - [System Design Document](docs/system-design.md)
 - [OpenAPI 3.0 API Specification](docs/api-contract.yaml)
 - [Agent & Developer Guidelines](AGENTS.md)
