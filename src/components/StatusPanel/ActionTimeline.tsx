@@ -1,6 +1,16 @@
 import React from 'react';
 import { History, Clock } from 'lucide-react';
 import { ActionLog } from '../../types/vehicle';
+import {
+  Timeline,
+  TimelineItem,
+  TimelineConnector,
+  TimelineContent,
+  TimelineHeader,
+  TimelineTitle,
+  TimelineTime,
+  TimelineDescription,
+} from '@/components/ui/timeline';
 
 interface ActionTimelineProps {
   actionHistory: ActionLog[];
@@ -19,28 +29,28 @@ export const ActionTimeline: React.FC<ActionTimelineProps> = ({ actionHistory })
         No past actions or manager notes logged for this vehicle yet.
       </div>
     ) : (
-      <div className="space-y-3 relative before:absolute before:left-3.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
+      <Timeline>
         {actionHistory.map((item) => (
-          <div key={item.id} className="relative pl-8">
-            <div className="absolute left-2 top-2 size-3.5 -translate-x-1/2 rounded-full bg-white border-2 border-indigo-600 shadow-xs" />
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 shadow-2xs">
-              <div className="flex items-center justify-between text-xs mb-1.5">
-                <span className="font-bold text-indigo-700 font-mono">
-                  {item.actionType.replace('_', ' ')}
-                </span>
-                <span className="text-[11px] text-slate-500 flex items-center gap-1 font-mono font-medium">
-                  <Clock className="size-3" />
-                  {new Date(item.timestamp).toLocaleString()}
-                </span>
+          <TimelineItem key={item.id}>
+            <TimelineConnector />
+            <TimelineContent>
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 shadow-2xs">
+                <TimelineHeader>
+                  <TimelineTitle>{item.actionType.replace('_', ' ')}</TimelineTitle>
+                  <TimelineTime className="flex items-center gap-1">
+                    <Clock className="size-3" />
+                    {new Date(item.timestamp).toLocaleString()}
+                  </TimelineTime>
+                </TimelineHeader>
+                <TimelineDescription>{item.note}</TimelineDescription>
+                <div className="text-[10px] text-slate-400 mt-2 font-semibold">
+                  Logged by: <span className="text-slate-600">{item.author}</span>
+                </div>
               </div>
-              <p className="text-xs text-slate-700 leading-relaxed font-medium">{item.note}</p>
-              <div className="text-[10px] text-slate-400 mt-2 font-semibold">
-                Logged by: <span className="text-slate-600">{item.author}</span>
-              </div>
-            </div>
-          </div>
+            </TimelineContent>
+          </TimelineItem>
         ))}
-      </div>
+      </Timeline>
     )}
   </div>
 );
